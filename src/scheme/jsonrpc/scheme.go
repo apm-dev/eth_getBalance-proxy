@@ -65,7 +65,7 @@ func (s *JsonRpcScheme) BuildUnsupportedMethodResponse(req *domain.JsonRpcReques
 		JsonRpc: "2.0",
 		Error: &domain.JsonRpcError{
 			Code:    -32601,
-			Message: fmt.Sprintf("the method %s does not exist/is not available", req.Method),
+			Message: fmt.Sprintf("the method '%s' does not exist/is not available", req.Method),
 		},
 	}
 }

@@ -57,7 +57,7 @@ func (s *rpcProxyService) SendRequest(c context.Context, blockchain string, req 
 	// get available nodes for requested blockchain
 	nodes, err := s.nodeRepo.GetNodesByBlockchain(blockchain)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(domain.ErrInternalServer, err.Error())
 	}
 	if len(nodes) == 0 {
 		return nil, errors.Wrapf(domain.ErrInternalServer, "there is no available nodes for '%s'", blockchain)

@@ -9,6 +9,7 @@ import (
 	"github.com/apm-dev/eth_getBalance-proxy/src/domain/mocks"
 	"github.com/apm-dev/eth_getBalance-proxy/src/proxy"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func Test_SendRequest(t *testing.T) {
@@ -89,7 +90,7 @@ func Test_SendRequest(t *testing.T) {
 		)
 	})
 
-	t.Run("response from cache when available", func(t *testing.T) {
+	t.Run("return response from cache when available", func(t *testing.T) {
 		mockCache.On("GetCachedResponse", "eth", normalRpcRequest).
 			Return(normalRpcResponse, true).Once()
 
@@ -102,4 +103,19 @@ func Test_SendRequest(t *testing.T) {
 		mockNodeRepo.AssertNotCalled(t, "GetNodesByBlockchain", "eth")
 	})
 
+	t.Run("no available nodes for blockchain", func(t *testing.T) {
+		mockCache.On("GetCachedResponse", mock.Anything, mock.Anything).
+			Return(nil, false).Once()
+		mockNodeRepo.On("GetNodesByBlockchain", "eth").
+			Return(nil, nil).Once()
+
+		resp, err := rpcProxy.SendRequest(context.Background(), "eth", normalRpcRequest)
+		assert.Nil(t, resp)
+		assert.ErrorIs(t, err, domain.ErrInternalServer)
+
+		mockCache.AssertExpectations(t)
+		mockNodeRepo.AssertExpectations(t)
+	})
+
+	// above test are just Proof Of Concept, there are many more tests to have
 }

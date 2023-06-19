@@ -37,6 +37,17 @@ func main() {
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 	}))
+	// Healthz
+	e.GET("/healthz", func(c echo.Context) error {
+		// For liveness check, simply return HTTP 200 OK
+		// indicating that the application is live and healthy.
+
+		// For readiness check, we can perform additional checks
+		// such as database connectivity, external service dependencies,
+		// or other necessary components, and return HTTP 200 OK only
+		// when the application is ready to serve traffic.
+		return c.NoContent(http.StatusOK)
+	})
 
 	nodeRepo := _nodeRepo.NewNodeRepository()
 

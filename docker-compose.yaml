@@ -1,0 +1,9 @@
+version: "3.8"
+services:
+  proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: web3_api_proxy
+    ports:
+      - 8000:8000

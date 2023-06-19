@@ -12,11 +12,12 @@ import (
 	"github.com/apm-dev/eth_getBalance-proxy/src/config"
 	_nodeRepo "github.com/apm-dev/eth_getBalance-proxy/src/node/data/repo"
 	prometheusmetrics "github.com/apm-dev/eth_getBalance-proxy/src/prometheus_metrics"
+	_prometheusHttp "github.com/apm-dev/eth_getBalance-proxy/src/prometheus_metrics/presentation/http"
 	_proxyService "github.com/apm-dev/eth_getBalance-proxy/src/proxy"
 	"github.com/apm-dev/eth_getBalance-proxy/src/proxy/data/cache"
 	_proxyHttp "github.com/apm-dev/eth_getBalance-proxy/src/proxy/presentation/http"
-	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/sirupsen/logrus"
 )
 
@@ -32,14 +33,10 @@ func main() {
 	prometheus := prometheusmetrics.NewService(strings.ReplaceAll(config.App.ServiceName, "-", "_") + "__")
 
 	e := echo.New()
-	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			prometheus.AddRpsCount(c.Request().Method + " " + c.Request().URL.Path)
-			c.Response().Header().Set("Access-Control-Allow-Origin", "*")
-			return next(c)
-		}
-	})
-	e.GET("/metrics", echoprometheus.NewHandler())
+	// CORS
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+	}))
 
 	nodeRepo := _nodeRepo.NewNodeRepository()
 
@@ -50,7 +47,8 @@ func main() {
 
 	rpcProxy := _proxyService.NewRpcProxyService(config, rpcProxyCache, nodeRepo)
 
-	_proxyHttp.NewProxyHandler(e, rpcProxy, prometheus)
+	_prometheusHttp.RegisterPrometheusHandlers(e, prometheus)
+	_proxyHttp.RegisterProxyHandlers(e, rpcProxy, prometheus)
 
 	// Start server
 	go func() {

@@ -18,7 +18,7 @@ type ProxyHandler struct {
 	prometheus      domain.PrometheusMetrics
 }
 
-func NewProxyHandler(
+func RegisterProxyHandlers(
 	e *echo.Echo,
 	rps domain.RpcProxyService,
 	prometheus domain.PrometheusMetrics,
